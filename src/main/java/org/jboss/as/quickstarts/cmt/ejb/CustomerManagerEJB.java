@@ -16,27 +16,21 @@
  */
 package org.jboss.as.quickstarts.cmt.ejb;
 
-import java.rmi.RemoteException;
 import java.util.List;
 
-import javax.ejb.EJBException;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.inject.Inject;
-import javax.jms.JMSException;
-import javax.naming.NamingException;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.transaction.HeuristicMixedException;
-import javax.transaction.HeuristicRollbackException;
-import javax.transaction.NotSupportedException;
-import javax.transaction.RollbackException;
-import javax.transaction.SystemException;
+import jakarta.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.RollbackException;
+import jakarta.transaction.Transactional;
+import jakarta.transaction.Transactional.TxType;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.jboss.as.quickstarts.cmt.model.Customer;
 
-@Stateless
+@ApplicationScoped
 public class CustomerManagerEJB {
 
     @PersistenceContext
@@ -48,9 +42,17 @@ public class CustomerManagerEJB {
     @Inject
     private InvoiceManagerEJB invoiceManager;
 
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void createCustomer(String name) throws RemoteException, JMSException {
-        logMessageManager.logCreateCustomer(name);
+    @Transactional(TxType.REQUIRED)
+    public void createCustomer(String name) throws RollbackException, EntityExistsException {
+        try {
+            logMessageManager.logCreateCustomer(name);
+        } catch (RollbackException e) {
+            if (e.getCause() instanceof ConstraintViolationException) {
+                throw new EntityExistsException(e.getCause());
+            } else {
+                throw e;
+            }
+        }
 
         Customer c1 = new Customer();
         c1.setName(name);
@@ -62,7 +64,7 @@ public class CustomerManagerEJB {
         // the invoice is not delivered when we cause an EJBException
         // after the fact but before the transaction is committed.
         if (!nameIsValid(name)) {
-            throw new EJBException("Invalid name: customer names should only contain letters & '-'");
+            throw new IllegalArgumentException("Invalid name: customer names should only contain letters & '-'");
         }
     }
 
@@ -74,16 +76,8 @@ public class CustomerManagerEJB {
      * List all the customers.
      *
      * @return
-     * @throws NamingException
-     * @throws NotSupportedException
-     * @throws SystemException
-     * @throws SecurityException
-     * @throws IllegalStateException
-     * @throws RollbackException
-     * @throws HeuristicMixedException
-     * @throws HeuristicRollbackException
      */
-    @TransactionAttribute(TransactionAttributeType.NEVER)
+    @Transactional(TxType.NEVER)
     @SuppressWarnings("unchecked")
     public List<Customer> listCustomers() {
         return entityManager.createQuery("select c from Customer c").getResultList();

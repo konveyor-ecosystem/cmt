@@ -16,55 +16,44 @@
  */
 package org.jboss.as.quickstarts.cmt.ejb;
 
-import java.rmi.RemoteException;
 import java.util.List;
 
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.jms.JMSException;
-import javax.naming.NamingException;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.transaction.HeuristicMixedException;
-import javax.transaction.HeuristicRollbackException;
-import javax.transaction.NotSupportedException;
-import javax.transaction.RollbackException;
-import javax.transaction.SystemException;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.RollbackException;
+import jakarta.transaction.Transactional;
+import jakarta.transaction.Transactional.TxType;
 
 import org.jboss.as.quickstarts.cmt.model.LogMessage;
 
-@Stateless
+@ApplicationScoped
 public class LogMessageManagerEJB {
     @PersistenceContext
     private EntityManager entityManager;
 
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void logCreateCustomer(String name) throws RemoteException, JMSException {
+    /**
+     * Logs the customer name that a record is intended to be created for.
+     *
+     * @param name
+     *     The name to log a record for.
+     * @throws RollbackException
+     *     When a log message for the passed-in name already exists.
+     */
+    @Transactional(value = TxType.REQUIRES_NEW)
+    public void logCreateCustomer(String name) throws RollbackException {
         LogMessage lm = new LogMessage();
         lm.setMessage("Attempt to create record for customer: '" + name + "'");
-        entityManager.persist(lm);
-    }
 
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void blaMethod() throws RemoteException, JMSException {
-        logCreateCustomer("Niks");
+        entityManager.persist(lm);
     }
 
     /**
      * List all the log-messages.
      *
      * @return
-     * @throws NamingException
-     * @throws NotSupportedException
-     * @throws SystemException
-     * @throws SecurityException
-     * @throws IllegalStateException
-     * @throws RollbackException
-     * @throws HeuristicMixedException
-     * @throws HeuristicRollbackException
      */
-    @TransactionAttribute(TransactionAttributeType.NEVER)
+    @Transactional(TxType.NEVER)
     @SuppressWarnings("unchecked")
     public List<LogMessage> listLogMessages() {
         return entityManager.createQuery("select lm from LogMessage lm").getResultList();

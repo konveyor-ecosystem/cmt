@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<extends path="template.qute">
+    <param name="content">
+        <h1>List of customers</h1>
+        <table id="customertable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Id</th>
+                </tr>
+            </thead>
+            <tbody>
+                {#for u in customers}
+                    <tr>
+                        <td>{u.name}</td>
+                        <td>{u.id}</td>
+                    </tr>
+                {/for}
+            </tbody>
+        </table>
+        <a href="javascript:history.back(-1)">Go Back</a>
+    </param>
+</extends>

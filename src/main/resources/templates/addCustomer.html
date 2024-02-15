@@ -1,0 +1,15 @@
+{#include template}
+<form id="addCustomerForm" action="/customers/addCustomer" method="post">
+    <table>
+        <tr>
+            <td><label for="name">Name:</label></td>
+            <td><input id="name" name="name" value="{name ?: ''}" /></td>
+            <td><button type="submit">Add</button></td>
+        </tr>
+    </table>
+</form>
+<ul>
+    <li><a href="/customers">List customers</a></li>
+    <li><a href="/logMessages">List log messages</a></li>
+</ul>
+{/include}

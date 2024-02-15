@@ -16,30 +16,40 @@
  */
 package org.jboss.as.quickstarts.cmt.controller;
 
-import java.util.List;
-
-import javax.faces.bean.RequestScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.naming.NamingException;
-import javax.transaction.HeuristicMixedException;
-import javax.transaction.HeuristicRollbackException;
-import javax.transaction.NotSupportedException;
-import javax.transaction.RollbackException;
-import javax.transaction.SystemException;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import org.jboss.as.quickstarts.cmt.ejb.LogMessageManagerEJB;
-import org.jboss.as.quickstarts.cmt.model.LogMessage;
 
-@Named("logMessageManager")
-@RequestScoped
+import io.quarkus.qute.Template;
+import io.quarkus.qute.TemplateInstance;
+
+@Path("/logMessages")
 public class LogMessageManager {
     @Inject
     private LogMessageManagerEJB logMessageManager;
 
-    public List<LogMessage> getLogMessages() throws SecurityException, IllegalStateException,
-        NamingException, NotSupportedException, SystemException, RollbackException,
-        HeuristicMixedException, HeuristicRollbackException {
-        return logMessageManager.listLogMessages();
+    @Inject
+    Template logMessages;
+
+    /**
+     * Renders a page to display the list of all log messages.
+     *
+     * @return
+     *     The page rendered from the "logMessages" Qute template.
+     */
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    public Response getLogMessages() {
+        TemplateInstance logMessagesInstance = logMessages
+                .data("logMessages", logMessageManager.listLogMessages());
+
+        return Response
+                .ok(logMessagesInstance.render())
+                .build();
     }
 }

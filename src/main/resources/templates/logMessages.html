@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<extends path="template.qute">
+    <param name="content">
+        <h1>List of log-messages</h1>
+        <table id="logmessages">
+            <tr>
+                <th>Message</th>
+                <th>Id</th>
+            </tr>
+            {#for lm in logMessages}
+                <tr>
+                    <td>{lm.message}</td>
+                    <td>{lm.id}</td>
+                </tr>
+            {/for}
+        </table>
+        <a href="javascript:history.back(-1)">Go Back</a>
+    </param>
+</extends>

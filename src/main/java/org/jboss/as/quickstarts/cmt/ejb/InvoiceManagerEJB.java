@@ -16,28 +16,22 @@
  */
 package org.jboss.as.quickstarts.cmt.ejb;
 
-import javax.annotation.Resource;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.inject.Inject;
-import javax.jms.JMSConnectionFactory;
-import javax.jms.JMSContext;
-import javax.jms.Queue;
+import jakarta.enterprise.context.ApplicationScoped;
 
-@Stateless
+import jakarta.transaction.Transactional;
+import jakarta.transaction.Transactional.TxType;
+
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
+
+@ApplicationScoped
 public class InvoiceManagerEJB {
 
-    @Inject
-    @JMSConnectionFactory("java:/JmsXA")
-    private JMSContext jmsContext;
+    @Channel("CMTQueue")
+    Emitter<String> customerNameEmitter;
 
-    @Resource(lookup = "java:/queue/CMTQueue")
-    private Queue queue;
-
-    @TransactionAttribute(TransactionAttributeType.MANDATORY)
+    @Transactional(TxType.MANDATORY)
     public void createInvoice(String name) {
-        jmsContext.createProducer()
-                .send(queue, "Created invoice for customer named: " + name);
+        customerNameEmitter.send("Created invoice for customer named: " + name);
     }
 }
